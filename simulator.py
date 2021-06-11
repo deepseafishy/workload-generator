@@ -31,13 +31,10 @@ def run_command(command, period):
     cpu_util = 0
     mem_util = 0
     pid = process.pid
-    print(pid)
     while(True):
         if process.poll() is None:
             end = time()
-            print(end)
             if (end - start) > period:
-                print(-cnt)
                 cnt += 1
                 cpu_util += get_cpu_util(pid)
                 cpu_util = cpu_util / cnt
@@ -45,17 +42,15 @@ def run_command(command, period):
                 mem_util = mem_util / cnt
                 print('kill process after', str(end-start))
                 process.kill()
-                print('return')
                 return cpu_util, mem_util
             else:
-                print(cnt)
                 temp = get_cpu_util(pid)
                 cpu_util += temp
                 temp = get_mem_util(pid)
                 mem_util += temp
                 cnt += 1
         else:
-            print('Error caused by signal' + str(-process.poll()))
+            print('Error caused by signal ' + str(-process.poll()))
             break
     # error 
     process.kill()
@@ -112,7 +107,8 @@ def simulate_trace(trace_file, accelerated):
     # Specify the portion [start, end) of the workload that would be simulated
     start = 0
     end = len(times)
-    
+    print(end)
+
     cpu_err_margin = 0
     mem_err_margin = 0
 
@@ -130,8 +126,8 @@ def simulate_trace(trace_file, accelerated):
         
         # If you don't want to simulate either of CPU or MEM, comment out appropriately:
         command = './fake-workload/build/workload/workload --threads 1 --buckets 1' 
-        command = command + ' --cpu-util ' + str(target_cpu) 
-        command = command + ' --memory-size ' + str(int(target_mem*MACHINE_SIZE/1000000))
+        command = command + ' --cpu-util ' + str(target_cpu - ALPHA) 
+#        command = command + ' --memory-size ' + str(int(target_mem*MACHINE_SIZE/1000000))
         print(command)
         
         # Run the resource-usage-generator
@@ -182,7 +178,10 @@ def find_file_to_simulate(seed):
 def main(seed):
     # SET PARAMETERS
     global PERIOD
-    PERIOD = 15 # seconds
+    global ALPHA
+    PERIOD = 10     # seconds
+    ALPHA = 1/100   # percentage of cpu the ./build process takes at mininum / 100 (to make it between [0, 1]
+
     global COLOR
     COLOR = {
         '1_free': 'green',
@@ -192,7 +191,8 @@ def main(seed):
         'default': 'black'
     }
     global TYPE
-    TYPE = '2_beb'
+    TYPE = '1_free'
+
     global MACHINE_SIZE
     global INPUT_DIR
     global OUTPUT_DIR
@@ -203,8 +203,10 @@ def main(seed):
     OUTPUT_DIR = './WorkloadResultExamples/' 
 
     # FIND FILE TO SIMULATE (OPTIONAL)
-    TRACE_FILE_NAME = find_file_to_simulate(seed)
-    
+    #TRACE_FILE_NAME = find_file_to_simulate(seed)
+    TRACE_FILE_NAME = 'file_169637062408_212549600003_3324'
+    print(TRACE_FILE_NAME)
+
     # SIMULATE TRACE
     times, avg_cpu, mock_avg_cpu, avg_mem, mock_avg_mem = simulate_trace(INPUT_DIR + TRACE_FILE_NAME, True)
 
