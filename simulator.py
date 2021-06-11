@@ -56,7 +56,7 @@ def run_command(command, period):
     process.kill()
     return -1, -1;
 
-def drawGraph(times, col, f_name, avg_cpu=None, avg_mem=None):
+def drawGraph(times, col, f_name, avg_cpu=None, avg_mem=None, textstr=None):
     assert(sorted(times) == times)
 
     if avg_cpu != None:
@@ -66,6 +66,8 @@ def drawGraph(times, col, f_name, avg_cpu=None, avg_mem=None):
         plt.plot((times), avg_cpu, color=col)
         plt.title(f_name)
         plt.ylim([mini-0.0005, maxi+0.0005])
+        if textstr is not None:
+            plt.text(0.02, 0.5, textstr, fontsize=14, transform=plt.gcf().transFigure)
         plt.savefig(OUTPUT_DIR + f_name)
         return
     if avg_mem != None:
@@ -126,7 +128,9 @@ def simulate_trace(trace_file, accelerated):
         
         # If you don't want to simulate either of CPU or MEM, comment out appropriately:
         command = './fake-workload/build/workload/workload --threads 1 --buckets 1' 
-        command = command + ' --cpu-util ' + str(target_cpu - ALPHA) 
+        if target_cpu - ALPHA > ALPHA:
+            command = command + ' --cpu-util ' + str(target_cpu-ALPHA) 
+       
 #        command = command + ' --memory-size ' + str(int(target_mem*MACHINE_SIZE/1000000))
         print(command)
         
@@ -149,17 +153,17 @@ def simulate_trace(trace_file, accelerated):
     print('mock: ', len(mock_avg_cpu), len(mock_avg_mem))
     print('Error margin (CPU): ', cpu_err_margin, len(mock_avg_cpu), cpu_err_margin/len(mock_avg_cpu))
     print('Error margin: (MEM)', mem_err_margin, len(mock_avg_mem), mem_err_margin/len(mock_avg_mem))
-    return times, avg_cpu, mock_avg_cpu, avg_mem, mock_avg_mem;
+    return times, avg_cpu, mock_avg_cpu, avg_mem, mock_avg_mem, cpu_err_margin/len(mock_avg_cpu), mem_err_margin/len(mock_avg_mem);
 
 
-def drawCPU(true_cpu, mock_cpu, times, start, end, TRACE_FILE):
-    drawGraph(times[start:end], avg_cpu=true_cpu[start:end], col=COLOR[TYPE], f_name='{}_cpu_true'.format(TRACE_FILE));
-    drawGraph(times[start:end], avg_cpu=mock_cpu, col=COLOR[TYPE], f_name='{}_cpu_mock'.format(TRACE_FILE));
+def drawCPU(true_cpu, mock_cpu, times, start, end, file_name, txt=None):
+    drawGraph(times[start:end], avg_cpu=true_cpu[start:end], col=COLOR[TYPE], f_name='{}_cpu_true'.format(file_name), textstr=txt);
+    drawGraph(times[start:end], avg_cpu=mock_cpu, col=COLOR[TYPE], f_name='{}_cpu_mock'.format(file_name), textstr=txt);
 
     
 def drawMEM(true_mem, mock_mem, times, start, end, TRACE_FILE):
-    drawGraph(times[start:end], avg_mem=true_mem[start:end], col=COLOR[TYPE], f_name='{}_mem_true'.format(TRACE_FILE));
-    drawGraph(times[start:end], avg_mem=mock_mem, col=COLOR[TYPE], f_name='{}_mem_mock'.format(TRACE_FILE));
+    drawGraph(times[start:end], avg_mem=true_mem[start:end], col=COLOR[TYPE], f_name='{}_mem_true'.format(file_name));
+    drawGraph(times[start:end], avg_mem=mock_mem, col=COLOR[TYPE], f_name='{}_mem_mock'.format(file_name));
 
     
     
@@ -179,7 +183,7 @@ def main(seed):
     # SET PARAMETERS
     global PERIOD
     global ALPHA
-    PERIOD = 10     # seconds
+    PERIOD = 5     # seconds
     ALPHA = 1/100   # percentage of cpu the ./build process takes at mininum / 100 (to make it between [0, 1]
 
     global COLOR
@@ -208,11 +212,12 @@ def main(seed):
     print(TRACE_FILE_NAME)
 
     # SIMULATE TRACE
-    times, avg_cpu, mock_avg_cpu, avg_mem, mock_avg_mem = simulate_trace(INPUT_DIR + TRACE_FILE_NAME, True)
+    times, avg_cpu, mock_avg_cpu, avg_mem, mock_avg_mem, cpu_err, mem_err = simulate_trace(INPUT_DIR + TRACE_FILE_NAME, True)
 
     # DRAW GRAPH (OPTIONAL)
-    drawCPU(avg_cpu, mock_avg_cpu, times, 0, len(times), TRACE_FILE_NAME);
-    drawMEM(avg_mem, mock_avg_mem, times, 0, len(times), TRACE_FILE_NAME);
+    text = "Period {}, cpu err {}, mem_err {}".format(PERIOD, cpu_err, mem_err) 
+    drawCPU(avg_cpu, mock_avg_cpu, times, 0, len(times), TRACE_FILE_NAME+"__thrid", text);
+#    drawMEM(avg_mem, mock_avg_mem, times, 0, len(times), TRACE_FILE_NAME);
     
 if __name__ == '__main__':
     if len(sys.argv) == 1:
