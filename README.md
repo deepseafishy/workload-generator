@@ -22,12 +22,13 @@ Example:
 # Possible configurations
 - Change parameters:
   - The following global parameters can be changed in the ```main()``` function:
+    - INPUT_DIR: Directory name of where the workload file is saved
+    - TRACE_FILE_NAME: Name of workload file (searched randomly given seed)
+    - OUTPUT_DIR: Directory name of where the graphs should be saved
     - PERIOD: time it takes in seconds to simulate one time step (for Google trace, it should be 5min since each time step represents 5min in real life. However, this is unrealistic for a simulator so we can change this to 10~15 seconds). A longer period is found to give better results.
     - COLOR: The color of the graph
     - MACHINE_SIZE: Size of the machine (in Bytes).
-    - TYPE: The classification of the task (1_free, 2_beb, 3_mid, 4_prod)
-    - TRACE_DIR: Directory name of where the workload file is saved
-    - TRACE_FILE: Name of workload file
+
 - Comment out some functions
   - Some functions such as drawMEM(), drawCPU(), find_file_to_simulate() can be commented out if they are not needed. However, if you disable find_file_to_simulate(), you MUST write the workload file's name in TRACE_FILE.
 - accelerated
