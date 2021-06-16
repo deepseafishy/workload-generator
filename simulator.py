@@ -81,7 +81,7 @@ def drawGraph(times, col, f_name, avg_cpu=None, avg_mem=None, textstr=None):
         return
     
     
-def simulate_trace(trace_file, accelerated):
+def simulate_trace(trace_file, accelerated, core):
     '''
     SIMULATE WORKLOAD
     input:
@@ -127,7 +127,8 @@ def simulate_trace(trace_file, accelerated):
         
         
         # If you don't want to simulate either of CPU or MEM, comment out appropriately:
-        command = './fake-workload/build/workload/workload --threads 1 --buckets 1' 
+        command = './fake-workload/build/workload/workload --buckets 1' 
+        command = command + '--thread ' + str(core)
         if target_cpu - ALPHA > ALPHA:
             command = command + ' --cpu-util ' + str(target_cpu-ALPHA) 
        
@@ -179,7 +180,7 @@ def find_file_to_simulate(seed):
     
 
         
-def main(seed):
+def main(seed, core):
     # SET PARAMETERS
     global PERIOD
     global ALPHA
@@ -212,7 +213,7 @@ def main(seed):
     print(TRACE_FILE_NAME)
 
     # SIMULATE TRACE
-    times, avg_cpu, mock_avg_cpu, avg_mem, mock_avg_mem, cpu_err, mem_err = simulate_trace(INPUT_DIR + TRACE_FILE_NAME, True)
+    times, avg_cpu, mock_avg_cpu, avg_mem, mock_avg_mem, cpu_err, mem_err = simulate_trace(INPUT_DIR + TRACE_FILE_NAME, True, core)
 
     # DRAW GRAPH (OPTIONAL)
     text = "Period {}, cpu err {}, mem_err {}".format(PERIOD, cpu_err, mem_err) 
@@ -221,8 +222,10 @@ def main(seed):
     
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        print('Enter seed number.')
+        print('Enter seed number and number of cores.')
+    elif len(sys.argv) == 2:
+        print('Enter number of cores.')
     else:
-        main(sys.argv[1]);
+        main(sys.argv[1], sys.argv[2]);
     
 
