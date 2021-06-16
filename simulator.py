@@ -127,8 +127,9 @@ def simulate_trace(trace_file, accelerated, core):
         
         
         # If you don't want to simulate either of CPU or MEM, comment out appropriately:
-        command = './fake-workload/build/workload/workload --buckets 1' 
-        command = command + '--thread ' + str(core)
+        command = './fake-workload/build/workload/workload'
+        command = command + ' --bucket 1'
+        command = command + ' --thread ' + str(core)
         if target_cpu - ALPHA > ALPHA:
             command = command + ' --cpu-util ' + str(target_cpu-ALPHA) 
        
