@@ -6,13 +6,11 @@ import os
 import ujson as json
 from time import time, sleep
 import random
+import matplotlib.pyplot as plt
+# import matplotlib.pyplot as figure
 import shlex
 import sys
 import random
-import argparse
-import multiprocessing
-from datetime import datetime
-
 
 def get_cpu_util(pid):
     process = subprocess.Popen(shlex.split('ps -p '+ str(pid) + ' -o %cpu'), encoding='utf-8', stdout=subprocess.PIPE)
@@ -57,6 +55,30 @@ def run_command(command, period):
     # error 
     process.kill()
     return -1, -1;
+
+def drawGraph(times, col, f_name, avg_cpu=None, avg_mem=None, textstr=None):
+    assert(sorted(times) == times)
+
+    if avg_cpu != None:
+        mini = min(avg_cpu)
+        maxi = max(avg_cpu)
+        plt.figure(figsize=(15, 6), dpi=80)
+        plt.plot((times), avg_cpu, color=col)
+        plt.title(f_name)
+        plt.ylim([mini-0.0005, maxi+0.0005])
+        if textstr is not None:
+            plt.text(0.02, 0.5, textstr, fontsize=14, transform=plt.gcf().transFigure)
+        plt.savefig(OUTPUT_DIR + f_name)
+        return
+    if avg_mem != None:
+        mini = min(avg_mem)
+        maxi = max(avg_mem)
+        plt.figure(figsize=(15, 6), dpi=80)
+        plt.plot((times), avg_mem, color=col)
+        plt.title(f_name)
+        plt.ylim([mini-0.0005, maxi+0.0005])
+        plt.savefig(OUTPUT_DIR + f_name)
+        return
     
     
 def simulate_trace(trace_file, accelerated, core):
@@ -160,7 +182,6 @@ def find_file_to_simulate(seed):
 
         
 def main(seed, core):
-    print('seed:', "current_time" if seed==None else seed, "|", "core:", core)
     # SET PARAMETERS
     global PERIOD
     global ALPHA
@@ -188,7 +209,7 @@ def main(seed, core):
     OUTPUT_DIR = './WorkloadResultExamples/' 
 
     # FIND FILE TO SIMULATE (OPTIONAL)
-    TRACE_FILE_NAME = find_file_to_simulate(seed)
+    #TRACE_FILE_NAME = find_file_to_simulate(seed)
     TRACE_FILE_NAME = 'file_169637062408_212549600003_3324'
     print(TRACE_FILE_NAME)
 
@@ -201,9 +222,11 @@ def main(seed, core):
 #    drawMEM(avg_mem, mock_avg_mem, times, 0, len(times), TRACE_FILE_NAME);
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--core_count", default=multiprocessing.cpu_count(), help="Specify the number of cores(threads) in which the simulator will work. Default = number of cpu cores.", type=int)
-    parser.add_argument("-s", "--seed", default=None, help="Specify the seed for generating a random number used in selecting the trace file. Default = current time.")
-    args = parser.parse_args()
-    main(args.seed, args.core_count)
+    if len(sys.argv) == 1:
+        print('Enter seed number and number of cores.')
+    elif len(sys.argv) == 2:
+        print('Enter number of cores.')
+    else:
+        main(sys.argv[1], sys.argv[2]);
     
+
